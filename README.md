@@ -210,7 +210,7 @@ npm run compile
 vsce package
 
 # 4. 发布（需要先登录）
-vsce login <your-publisher-name>
+vsce login huangjianjian
 vsce publish
 ```
 

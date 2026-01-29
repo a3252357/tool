@@ -171,11 +171,11 @@ ovsx publish cursor-skills-manager-0.1.0.vsix
   "name": "cursor-skills-manager",
   "displayName": "Cursor Skills Manager",
   "description": "管理 Cursor IDE 技能：自动添加技能文件夹到工作区，选择技能供 AI 使用",
-  "version": "0.1.0",
-  "publisher": "your-publisher-name",
+  "version": "0.1.6",
+  "publisher": "huangjianjian",
   "repository": {
-    "type": "git",
-    "url": "https://github.com/your-username/cursor-skills-manager.git"
+  "type": "git",
+  "url": "https://github.com/a3252357/tool.git"
   },
   "keywords": [
     "cursor",

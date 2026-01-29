@@ -7,8 +7,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/cursor-skills-manager.git"
+    "url": "https://github.com/a3252357/tool.git"
   },
+  "icon": "assert/logo/logo.png",
   "keywords": [
     "cursor",
     "skills",

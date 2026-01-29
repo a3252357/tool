@@ -38,7 +38,7 @@ vsce package
 # 在 Cursor 中：Ctrl+Shift+P -> Extensions: Install from VSIX...
 
 # 5. 发布到 Marketplace（首次需要登录）
-vsce login <your-publisher-name>
+vsce login huangjianjian
 vsce publish
 ```
 
@@ -49,10 +49,10 @@ vsce publish
 ```json
 {
   "version": "0.1.0",           // 更新版本号
-  "publisher": "your-name",     // 设置发布者名称
+  "publisher": "huangjianjian", // 设置发布者名称
   "repository": {                // 添加仓库地址（可选）
     "type": "git",
-    "url": "https://github.com/your-username/cursor-skills-manager.git"
+    "url": "https://github.com/a3252357/tool.git"
   }
 }
 ```
@@ -60,7 +60,7 @@ vsce publish
 ## 常见问题
 
 **Q: 提示缺少 publisher？**
-A: 在 `package.json` 中添加 `"publisher": "your-publisher-name"`
+A: 在 `package.json` 中添加 `"publisher": "huangjianjian"`
 
 **Q: 版本已存在？**
 A: 更新 `package.json` 中的版本号
