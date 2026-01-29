@@ -1,0 +1,187 @@
+{
+  "name": "cursor-skills-manager",
+  "displayName": "Cursor Skills Manager",
+  "description": "管理 Cursor IDE 技能：自动添加技能文件夹到工作区，选择技能供 AI 使用，支持中文描述",
+  "version": "0.1.6",
+  "publisher": "huangjianjian",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/cursor-skills-manager.git"
+  },
+  "keywords": [
+    "cursor",
+    "skills",
+    "ai",
+    "management",
+    "workspace"
+  ],
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "cursorSkillsView",
+          "name": "Cursor Skills",
+          "when": "true"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cursorSkills.refresh",
+        "title": "刷新技能列表",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cursorSkills.addToWorkspace",
+        "title": "添加技能文件夹到工作区",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "cursorSkills.toggleSkill",
+        "title": "切换技能启用状态",
+        "icon": "$(check)"
+      },
+      {
+        "command": "cursorSkills.openSkillFolder",
+        "title": "打开技能文件夹",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "cursorSkills.viewSkillDetails",
+        "title": "查看技能详情"
+      },
+      {
+        "command": "cursorSkills.setSkillsPath",
+        "title": "设置技能文件夹路径",
+        "icon": "$(folder-active)"
+      },
+      {
+        "command": "cursorSkills.setChineseDescription",
+        "title": "设置中文描述",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "cursorSkills.setCategory",
+        "title": "设置分类",
+        "icon": "$(tag)"
+      },
+      {
+        "command": "cursorSkills.generateCommands",
+        "title": "为技能生成 / 命令",
+        "icon": "$(symbol-event)"
+      },
+      {
+        "command": "cursorSkills.debugScan",
+        "title": "调试：显示扫描信息",
+        "icon": "$(debug)"
+      },
+      {
+        "command": "cursorSkills.insertSkillMention",
+        "title": "插入技能引用 (@技能名)",
+        "icon": "$(symbol-method)"
+      },
+      {
+        "command": "cursorSkills.testCompletion",
+        "title": "测试补全功能",
+        "icon": "$(debug)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "cursorSkills.refresh",
+          "when": "view == cursorSkillsView",
+          "group": "navigation"
+        },
+        {
+          "command": "cursorSkills.setSkillsPath",
+          "when": "view == cursorSkillsView",
+          "group": "navigation"
+        },
+        {
+          "command": "cursorSkills.addToWorkspace",
+          "when": "view == cursorSkillsView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "cursorSkills.toggleSkill",
+          "when": "view == cursorSkillsView",
+          "group": "inline"
+        },
+        {
+          "command": "cursorSkills.openSkillFolder",
+          "when": "view == cursorSkillsView",
+          "group": "1_actions"
+        },
+        {
+          "command": "cursorSkills.viewSkillDetails",
+          "when": "view == cursorSkillsView",
+          "group": "1_actions"
+        },
+        {
+          "command": "cursorSkills.setChineseDescription",
+          "when": "view == cursorSkillsView",
+          "group": "1_actions"
+        },
+        {
+          "command": "cursorSkills.setCategory",
+          "when": "view == cursorSkillsView",
+          "group": "1_actions"
+        },
+        {
+          "command": "cursorSkills.generateCommands",
+          "when": "view == cursorSkillsView",
+          "group": "2_commands"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Cursor Skills Manager",
+      "properties": {
+        "cursorSkills.autoAddToWorkspace": {
+          "type": "boolean",
+          "default": false,
+          "description": "自动将技能文件夹添加到工作区"
+        },
+        "cursorSkills.skillsPath": {
+          "type": "string",
+          "default": "",
+          "description": "技能根目录路径（配置后会递归扫描该目录下所有包含 SKILL.md 的文件夹作为技能，并添加到工作区。例如：D:\\baodian\\AIWork。留空则使用默认路径 ~/.cursor/skills*）"
+        },
+        "cursorSkills.workspaceSaveFolder": {
+          "type": "string",
+          "default": "",
+          "description": "当自动添加技能文件夹到工作区后，如果当前不是已保存的 workspace，则在此目录下自动生成一个 .code-workspace 文件。留空则不自动保存。可填写绝对路径，例如：D:\\baodian\\AIWork\\workspaces；相对路径会基于用户主目录解析。"
+        },
+        "cursorSkills.autoGenerateCommandsForEnabledSkills": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否自动为所有“已启用”的技能生成 Cursor 聊天命令（/commands）。开启后，每次扫描技能时，会在 ~/.cursor/commands/skills-auto 下为启用的技能补齐命令文件（若已存在则不会覆盖）。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.0.0"
+  }
+}
