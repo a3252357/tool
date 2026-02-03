@@ -184,15 +184,16 @@ export function activate(context: vscode.ExtensionContext) {
         if (currentPath) {
             if (fs.existsSync(currentPath)) {
                 outputChannel.appendLine(`路径存在: 是`);
-                outputChannel.appendLine(`开始测试扫描...`);
-                
+                outputChannel.appendLine('');
+                outputChannel.appendLine('--- 扫描判断过程 ---');
                 try {
-                    const result = await skillsManager.testScanPath(currentPath);
+                    const result = await skillsManager.testScanPathWithLog(currentPath, (msg) => outputChannel.appendLine(msg));
+                    outputChannel.appendLine('--- 判断过程结束 ---');
+                    outputChannel.appendLine('');
                     outputChannel.appendLine(`扫描完成，找到 ${result.found} 个技能:`);
                     result.skills.forEach((skill: any, index: number) => {
                         outputChannel.appendLine(`  ${index + 1}. ${skill.name} (${skill.path})`);
                     });
-                    
                     if (result.found === 0) {
                         outputChannel.appendLine('');
                         outputChannel.appendLine('未找到技能，可能的原因:');

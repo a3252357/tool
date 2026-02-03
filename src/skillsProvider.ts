@@ -8,11 +8,16 @@ export class SkillTreeItem extends vscode.TreeItem {
     ) {
         super(skill.name, collapsibleState);
         
-        // 优先显示中文描述，如果没有则显示英文描述
+        // 标题：中文在前，英文名作为签名放在括号里
+        const displayTitle = skill.chineseDescription
+            ? `${skill.chineseDescription} (${skill.name})`
+            : skill.name;
+
+        // tooltip 优先显示中文 + 英文 + 描述
         const displayDescription = skill.chineseDescription || skill.description || skill.name;
-        this.tooltip = displayDescription;
+        this.tooltip = `${displayTitle}\n${displayDescription}`;
         
-        // 在描述中显示中文描述或英文描述（截断）
+        // 描述行：简短显示中文或英文描述（截断）
         if (skill.chineseDescription) {
             this.description = skill.chineseDescription.length > 50 
                 ? skill.chineseDescription.substring(0, 50) + '...' 
@@ -41,10 +46,10 @@ export class SkillTreeItem extends vscode.TreeItem {
         this.iconPath = new vscode.ThemeIcon(skill.enabled ? 'check' : 'circle-outline');
         this.contextValue = `skill-${skill.category}${skill.enabled ? '-enabled' : ''}`;
         
-        // 添加类别标签，如果有中文描述则在名称后显示
+        // 添加类别标签：中文在前，英文名签名在括号里
         const categoryLabel = categoryLabels[skill.category];
         const nameDisplay = skill.chineseDescription 
-            ? `${skill.name} (${skill.chineseDescription})` 
+            ? `${skill.chineseDescription} (${skill.name})` 
             : skill.name;
         this.label = `${categoryLabel}: ${nameDisplay}`;
     }

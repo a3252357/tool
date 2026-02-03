@@ -100,6 +100,83 @@ export class SkillsManager {
     }
 
     /**
+     * 递归扫描并输出判断过程（用于调试）
+     */
+    private scanSkillsRecursivelyWithLog(
+        rootPath: string,
+        category: 'personal' | 'project' | 'cursor',
+        log: (msg: string) => void,
+        maxDepth: number = 10,
+        currentDepth: number = 0,
+        indent: string = ''
+    ): Skill[] {
+        const skills: Skill[] = [];
+        if (currentDepth >= maxDepth || !fs.existsSync(rootPath)) {
+            return skills;
+        }
+        try {
+            const entries = fs.readdirSync(rootPath, { withFileTypes: true });
+            for (const entry of entries) {
+                const entryPath = path.join(rootPath, entry.name);
+                if (entry.name === 'node_modules' || entry.name === '.git' ||
+                    entry.name === 'out' || entry.name === 'dist' || entry.name === '.vscode' ||
+                    (entry.name.startsWith('.') && entry.name !== '.claude' && entry.name !== '.cursor')) {
+                    log(`${indent}跳过: ${entry.name} (过滤规则)`);
+                    continue;
+                }
+                if (entry.isDirectory()) {
+                    const skillMdPath = path.join(entryPath, 'SKILL.md');
+                    const hasSkillMd = fs.existsSync(skillMdPath);
+                    log(`${indent}目录: ${entry.name} | SKILL.md 存在: ${hasSkillMd}`);
+                    if (hasSkillMd) {
+                        const skill = this.parseSkillWithLog(entryPath, skillMdPath, category, log, indent + '  ');
+                        if (skill) {
+                            log(`${indent}  -> 视为技能: name="${skill.name}"`);
+                            skills.push(skill);
+                        } else {
+                            log(`${indent}  -> 未通过解析，未计入`);
+                        }
+                    } else {
+                        const subSkills = this.scanSkillsRecursivelyWithLog(entryPath, category, log, maxDepth, currentDepth + 1, indent + '  ');
+                        skills.push(...subSkills);
+                    }
+                }
+            }
+        } catch (error: any) {
+            log(`${indent}扫描异常: ${error.message}`);
+        }
+        return skills;
+    }
+
+    private parseSkillWithLog(
+        skillPath: string,
+        skillMdPath: string,
+        category: 'personal' | 'project' | 'cursor',
+        log: (msg: string) => void,
+        indent: string
+    ): Skill | null {
+        try {
+            let content = fs.readFileSync(skillMdPath, 'utf-8');
+            content = content.replace(/^\uFEFF/, ''); // 去除 BOM
+            const frontmatterMatch = content.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/);
+            if (!frontmatterMatch) {
+                log(`${indent}解析: frontmatter 未匹配 (需以 --- 开头和结尾的 YAML 块)`);
+                return null;
+            }
+            const frontmatter = frontmatterMatch[1];
+            const nameMatch = frontmatter.match(/^name:\s*(.+)$/m);
+            const descMatch = frontmatter.match(/^description:\s*(.+)$/m);
+            const name = nameMatch ? nameMatch[1].trim() : path.basename(skillPath);
+            const description = descMatch ? descMatch[1].trim() : '';
+            log(`${indent}解析: frontmatter 有效, name="${name}"`);
+            return { name, path: skillPath, fullPath: skillPath, description, enabled: false, category };
+        } catch (error: any) {
+            log(`${indent}解析异常: ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
      * 扫描所有技能文件夹
      */
     async scanSkills(): Promise<Skill[]> {
@@ -216,8 +293,9 @@ export class SkillsManager {
      */
     private parseSkill(skillPath: string, skillMdPath: string, category: 'personal' | 'project' | 'cursor'): Skill | null {
         try {
-            const content = fs.readFileSync(skillMdPath, 'utf-8');
-            const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
+            let content = fs.readFileSync(skillMdPath, 'utf-8');
+            content = content.replace(/^\uFEFF/, ''); // 去除 BOM
+            const frontmatterMatch = content.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/);
 
             if (!frontmatterMatch) {
                 return null;
@@ -445,7 +523,28 @@ export class SkillsManager {
             };
 
             fs.writeFileSync(fullPath, JSON.stringify(workspaceData, null, 2), 'utf-8');
-            vscode.window.showInformationMessage(`已生成 workspace 文件: ${fullPath}`);
+
+            // 生成后提示并可一键打开，使标题不再是“无标题工作区”
+            const choice = await vscode.window.showInformationMessage(
+                `已生成 workspace 文件: ${fullPath}`,
+                '在当前窗口打开',
+                '在新窗口打开'
+            );
+
+            if (choice === '在当前窗口打开') {
+                // 使用 vscode.openWorkspace 在当前窗口加载 .code-workspace
+                await vscode.commands.executeCommand(
+                    'vscode.openWorkspace',
+                    vscode.Uri.file(fullPath)
+                );
+            } else if (choice === '在新窗口打开') {
+                // 同样使用 vscode.openWorkspace，但强制在新窗口打开
+                await vscode.commands.executeCommand(
+                    'vscode.openWorkspace',
+                    vscode.Uri.file(fullPath),
+                    true
+                );
+            }
         } catch (error) {
             console.error('自动保存 workspace 失败:', error);
             vscode.window.showWarningMessage(`自动保存 workspace 失败：${error}`);
@@ -724,10 +823,14 @@ export class SkillsManager {
 
         const categoryLabel = this.getCategoryLabel(skill.category);
         const desc = skill.chineseDescription || skill.description || '（该技能暂无描述）';
+        const title = skill.chineseDescription || skill.name;
 
         const content = [
-            `# ${skill.name}`,
+            `# ${title}`,
             '',
+            // 英文名作为“签名”放在前面一行
+            skill.chineseDescription ? `> ${skill.name}` : '',
+            skill.chineseDescription ? '' : '',
             `**分类**：${categoryLabel}`,
             '',
             `**说明**：${desc}`,
@@ -788,6 +891,19 @@ export class SkillsManager {
             found: skills.length,
             skills: skills
         };
+    }
+
+    /**
+     * 测试扫描指定路径并输出判断过程（用于调试按钮）
+     */
+    async testScanPathWithLog(testPath: string, log: (msg: string) => void): Promise<{ found: number; skills: Skill[] }> {
+        if (!fs.existsSync(testPath)) {
+            throw new Error(`路径不存在: ${testPath}`);
+        }
+        log(`根路径: ${testPath}`);
+        log('');
+        const skills = this.scanSkillsRecursivelyWithLog(testPath, 'personal', log);
+        return { found: skills.length, skills };
     }
 
     /**

@@ -50,9 +50,9 @@ export class SkillCompletionProvider implements vscode.CompletionItemProvider {
                         vscode.CompletionItemKind.Value
                     );
                     
-                    // 显示名称和描述
+                    // 显示名称和描述：中文在前，英文名作为签名
                     const displayName = skill.chineseDescription 
-                        ? `${skill.name} (${skill.chineseDescription})` 
+                        ? `${skill.chineseDescription} (${skill.name})` 
                         : skill.name;
                     item.label = displayName;
                     
